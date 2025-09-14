@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Video Player Extractor</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css">
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+</head>
+<body>
+    <div class="container-fluid">
+        <!-- Header -->
+        <header class="bg-primary text-white py-4 mb-4">
+            <div class="container">
+                <div class="row align-items-center">
+                    <div class="col-md-8">
+                        <h1 class="display-5 fw-bold mb-2">
+                            <span class="netflix-style">WAHYUDIN-FLIX</span>
+                        </h1>
+                        <p class="lead mb-0">Watch more, work less. Procrastination level: Expert.</p>
+                    </div>
+                    <div class="col-md-4 text-md-end">
+                        <div class="badge bg-light text-dark">
+                            <i class="bi bi-lightning-fill"></i> Fast & Reliable
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </header>
+
+        <!-- Main Content -->
+        <main class="container">
+            <!-- Search Section -->
+            <section class="card shadow-sm mb-4">
+                <div class="card-body">
+                    <h2 class="card-title h4 mb-3">
+                        <i class="bi bi-search"></i> Search Movies & Series
+                    </h2>
+                    <p class="text-muted mb-3">Find movies and series by title</p>
+                    
+                    <div class="input-group input-group-lg mb-3">
+                        <span class="input-group-text bg-primary text-white">
+                            <i class="bi bi-search"></i>
+                        </span>
+                        <input type="text" id="searchInput" class="form-control" placeholder="Search for movies or series..." required>
+                        <button class="btn btn-primary" type="button" id="searchBtn">
+                            <i class="bi bi-search"></i> Search
+                        </button>
+                    </div>
+                    
+                    <div class="form-text">
+                        <i class="bi bi-info-circle"></i> Enter keywords to search for movies or series
+                    </div>
+                </div>
+            </section>
+
+            <!-- URL Input Section -->
+            <section class="card shadow-sm mb-4">
+                <div class="card-body">
+                    <h2 class="card-title h4 mb-3">
+                        <i class="bi bi-link-45deg"></i> Enter Video URL
+                    </h2>
+                    <p class="text-muted mb-3">Paste the URL of a movie or series episode to extract all available players</p>
+                    
+                    <div class="input-group input-group-lg mb-3">
+                        <span class="input-group-text bg-primary text-white">
+                            <i class="bi bi-globe"></i>
+                        </span>
+                        <input type="url" id="videoUrl" class="form-control" placeholder="https://example.com/movie-or-series-url" required>
+                        <button class="btn btn-primary" type="button" id="extractBtn">
+                            <i class="bi bi-search"></i> Extract Players
+                        </button>
+                    </div>
+                    
+                    <div class="form-text">
+                        <i class="bi bi-info-circle"></i> Supported formats: Movies and TV Series episodes
+                    </div>
+                </div>
+            </section>
+
+            <!-- Loading Indicator -->
+            <section id="loadingSection" class="d-none text-center py-5">
+                <div class="spinner-border text-primary" role="status">
+                    <span class="visually-hidden">Loading...</span>
+                </div>
+                <h4 class="mt-3">Extracting player URLs...</h4>
+                <p class="text-muted">Please wait while we fetch all available streaming options</p>
+            </section>
+
+            <!-- Search Results Section -->
+            <section id="searchResults" class="d-none">
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <h2 class="h4 mb-0">
+                        <i class="bi bi-list"></i> Search Results
+                    </h2>
+                    <div>
+                        <button id="clearSearchBtn" class="btn btn-outline-secondary btn-sm">
+                            <i class="bi bi-x-circle"></i> Clear
+                        </button>
+                    </div>
+                </div>
+                
+                <div class="row" id="searchResultsList">
+                    <!-- Search results will be populated here -->
+                </div>
+            </section>
+
+            <!-- Results Section -->
+            <section id="resultsSection" class="d-none">
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <h2 class="h4 mb-0">
+                        <i class="bi bi-collection-play"></i> Available Players
+                    </h2>
+                    <div>
+                        <button id="refreshBtn" class="btn btn-outline-primary btn-sm">
+                            <i class="bi bi-arrow-repeat"></i> Refresh
+                        </button>
+                    </div>
+                </div>
+                
+                <!-- Video Info -->
+                <div class="card mb-4">
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-md-8">
+                                <h3 id="videoTitle" class="h5 fw-bold">Video Title</h3>
+                                <p id="videoUrlDisplay" class="text-muted small mb-1"></p>
+                                <span id="episodeInfo" class="badge bg-success d-none"></span>
+                            </div>
+                            <div class="col-md-4 text-md-end">
+                                <span id="playerCount" class="badge bg-primary"></span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Players Tabs -->
+                <ul class="nav nav-tabs" id="playersTab" role="tablist">
+                    <!-- Tabs will be populated dynamically -->
+                </ul>
+                
+                <!-- Players Content -->
+                <div class="tab-content" id="playersTabContent">
+                    <!-- Tab content will be populated dynamically -->
+                </div>
+            </section>
+
+            <!-- Error Section -->
+            <section id="errorSection" class="d-none">
+                <div class="alert alert-danger d-flex align-items-center" role="alert">
+                    <i class="bi bi-exclamation-triangle-fill me-2"></i>
+                    <div>
+                        <h4 class="alert-heading">Extraction Error</h4>
+                        <p id="errorMessage" class="mb-0"></p>
+                    </div>
+                </div>
+            </section>
+        </main>
+
+        <!-- Footer -->
+        <footer class="bg-light mt-5 py-4">
+            <div class="container">
+                <div class="row">
+                    <div class="col-md-6">
+                        <p class="mb-0">&copy; 2025 Tumbihe. All rights reserved.</p>
+                    </div>
+                    <div class="col-md-6 text-md-end">
+                        <small class="text-muted">
+                            <i class="bi bi-shield-lock"></i> Secure and private video extraction
+                        </small>
+                    </div>
+                </div>
+            </div>
+        </footer>
+    </div>
+
+    <!-- Scripts -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="{{ url_for('static', filename='app.js') }}"></script>
+</body>
+</html>
