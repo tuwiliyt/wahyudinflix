@@ -15,6 +15,9 @@ class VideoPlayerExtractor {
         this.searchInput = document.getElementById('searchInput');
         this.searchBtn = document.getElementById('searchBtn');
         this.clearSearchBtn = document.getElementById('clearSearchBtn');
+        this.refreshLatestBtn = document.getElementById('refreshLatestBtn');
+        this.latestUploadsSection = document.getElementById('latestUploadsSection');
+        this.latestUploadsList = document.getElementById('latestUploadsList');
         this.loadingSection = document.getElementById('loadingSection');
         this.resultsSection = document.getElementById('resultsSection');
         this.searchResultsSection = document.getElementById('searchResults');
@@ -33,6 +36,7 @@ class VideoPlayerExtractor {
         this.refreshBtn.addEventListener('click', () => this.extractPlayers());
         this.searchBtn.addEventListener('click', () => this.performSearch());
         this.clearSearchBtn.addEventListener('click', () => this.clearSearchResults());
+        this.refreshLatestBtn.addEventListener('click', () => this.loadLatestUploads());
         
         this.videoUrlInput.addEventListener('keypress', (e) => {
             if (e.key === 'Enter') {
@@ -49,6 +53,13 @@ class VideoPlayerExtractor {
         // Load sample URL for demo
         this.videoUrlInput.value = 'https://new17.ngefilm.site/ice-road-vengeance-2025/';
         this.searchInput.placeholder = 'e.g., Wednesday, Ice Road, Peacemaker...';
+        
+        // Load latest uploads on initialization
+        setTimeout(() => {
+            this.loadLatestUploads();
+            // Load hero carousel with latest uploads
+            this.loadHeroCarousel();
+        }, 500); // Small delay to ensure DOM is fully loaded
     }
 
     async extractPlayers() {
@@ -62,6 +73,11 @@ class VideoPlayerExtractor {
         try {
             // Show loading state
             this.showLoading();
+            
+            // Scroll to loading section immediately so users can see the loading process
+            setTimeout(() => {
+                document.getElementById('loadingSection').scrollIntoView({ behavior: 'smooth' });
+            }, 100); // Small delay to ensure the loading section is visible first
             
             // Call the backend API
             const response = await fetch('/api/extract', {
@@ -82,6 +98,11 @@ class VideoPlayerExtractor {
             this.extractedData = data;
             this.displayResults(data);
             
+            // Scroll to results section after displaying results
+            setTimeout(() => {
+                document.getElementById('resultsSection').scrollIntoView({ behavior: 'smooth' });
+            }, 100); // Small delay to ensure content is rendered
+            
         } catch (error) {
             this.showError(error.message || 'Failed to extract players');
         }
@@ -98,6 +119,11 @@ class VideoPlayerExtractor {
         try {
             // Show loading state
             this.showLoading();
+            
+            // Scroll to loading section immediately so users can see the loading process
+            setTimeout(() => {
+                document.getElementById('loadingSection').scrollIntoView({ behavior: 'smooth' });
+            }, 100); // Small delay to ensure the loading section is visible first
             
             // Call the search API
             const response = await fetch('/api/search', {
@@ -117,8 +143,87 @@ class VideoPlayerExtractor {
             // Process and display search results
             this.displaySearchResults(data);
             
+            // Scroll to search results section after displaying results
+            setTimeout(() => {
+                document.getElementById('searchResults').scrollIntoView({ behavior: 'smooth' });
+            }, 100); // Small delay to ensure content is rendered
+            
         } catch (error) {
             this.showError(error.message || 'Failed to perform search');
+        }
+    }
+
+    async loadLatestUploads() {
+        try {
+            // Show loading state for latest uploads
+            this.latestUploadsList.innerHTML = `
+                <div class="col-12">
+                    <div class="text-center py-4">
+                        <div class="spinner-border text-primary" role="status">
+                            <span class="visually-hidden">Loading...</span>
+                        </div>
+                        <p class="mt-2">Memuat upload terbaru...</p>
+                    </div>
+                </div>
+            `;
+            
+            // Call the latest uploads API
+            const response = await fetch('/api/latest', {
+                method: 'GET',
+                headers: {
+                    'Content-Type': 'application/json',
+                }
+            });
+            
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
+            
+            const data = await response.json();
+            
+            // Process and display latest uploads
+            this.displayLatestUploads(data);
+            
+        } catch (error) {
+            this.latestUploadsList.innerHTML = `
+                <div class="col-12">
+                    <div class="alert alert-danger">
+                        <h5><i class="bi bi-exclamation-triangle"></i> Error Loading Latest Uploads</h5>
+                        <p>${error.message || 'Failed to load latest uploads'}</p>
+                    </div>
+                </div>
+            `;
+        }
+    }
+
+    async loadHeroCarousel() {
+        try {
+            // Call the latest uploads API to get data for hero carousel
+            const response = await fetch('/api/latest', {
+                method: 'GET',
+                headers: {
+                    'Content-Type': 'application/json',
+                }
+            });
+            
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
+            
+            const data = await response.json();
+            
+            // Process and display hero carousel
+            this.displayHeroCarousel(data);
+            
+        } catch (error) {
+            document.getElementById('heroCarousel').innerHTML = `
+                <div class="hero-placeholder d-flex align-items-center justify-content-center" style="height: 500px;">
+                    <div class="text-center">
+                        <h4 class="text-light">Error loading featured content</h4>
+                        <p class="text-light">${error.message || 'Failed to load latest uploads'}</p>
+                    </div>
+                </div>
+            `;
         }
     }
 
@@ -194,25 +299,20 @@ class VideoPlayerExtractor {
         // Display search results
         data.results.forEach((result, index) => {
             const resultItem = document.createElement('div');
-            resultItem.className = 'col-md-6 col-lg-4 mb-4';
+            resultItem.className = 'col-6 col-sm-4 col-md-3 col-lg-2 col-xl-2 mb-4';
             resultItem.innerHTML = `
-                <div class="card h-100 shadow-sm">
-                    <div class="card-body d-flex flex-column">
-                        <h5 class="card-title">${result.title}</h5>
-                        <div class="mb-2">
-                            <span class="badge bg-${result.type === 'Series' ? 'warning' : 'primary'}">${result.type}</span>
-                            ${result.rating ? `<span class="badge bg-success ms-2">${result.rating}</span>` : ''}
+                <div class="movie-card">
+                    <div class="poster-container">
+            <img src="${result.image_url || 'https://placehold.co/200x300?text=No+Image'}" alt="${result.title}" loading="lazy">
+        </div>
+                    <div class="card-body">
+                        <h5 class="card-title" title="${result.title}">${result.title.length > 30 ? result.title.substring(0, 30) + '...' : result.title}</h5>
+                        <div class="movie-meta">
+                            <span class="badge bg-${result.type === 'Series' ? 'warning' : 'danger'}">${result.type}</span>
+                            ${result.rating ? `<span class="badge bg-success">${result.rating}</span>` : ''}
                         </div>
-                        ${result.image_url ? `
-                            <div class="mb-3">
-                                <img src="${result.image_url}" class="card-img-top" alt="${result.title}" style="height: 200px; object-fit: cover;" loading="lazy">
-                            </div>
-                        ` : ''}
-                        <p class="card-text flex-grow-1">
-                            <small class="text-muted">${result.url}</small>
-                        </p>
-                        <button class="btn btn-primary mt-auto load-content-btn" data-url="${result.url}">
-                            <i class="bi bi-play-circle"></i> Load Players
+                        <button class="btn btn-danger load-content-btn" data-url="${result.url}">
+                            <i class="bi bi-play-circle"></i> Play
                         </button>
                     </div>
                 </div>
@@ -224,7 +324,7 @@ class VideoPlayerExtractor {
             const loadBtn = resultItem.querySelector('.load-content-btn');
             loadBtn.addEventListener('click', () => {
                 this.videoUrlInput.value = result.url;
-                this.extractPlayers();
+                this.extractPlayers(); // This will handle scrolling internally
             });
         });
         
@@ -236,6 +336,143 @@ class VideoPlayerExtractor {
         this.searchResultsSection.classList.add('d-none');
         this.searchInput.value = '';
         this.searchInput.focus();
+    }
+
+    displayHeroCarousel(data) {
+        // Check if there was an error
+        if (data.error) {
+            document.getElementById('heroCarousel').innerHTML = `
+                <div class="hero-placeholder d-flex align-items-center justify-content-center" style="height: 500px;">
+                    <div class="text-center">
+                        <h4 class="text-light">Error loading featured content</h4>
+                        <p class="text-light">${data.error}</p>
+                    </div>
+                </div>
+            `;
+            return;
+        }
+        
+        // Check if we have items
+        if (!data.items || data.items.length === 0) {
+            document.getElementById('heroCarousel').innerHTML = `
+                <div class="hero-placeholder d-flex align-items-center justify-content-center" style="height: 500px;">
+                    <div class="text-center">
+                        <h4 class="text-light">No featured content available</h4>
+                        <p class="text-light">Check back later for new releases</p>
+                    </div>
+                </div>
+            `;
+            return;
+        }
+        
+        // Use the first 5 items for the hero carousel
+        const heroItems = data.items.slice(0, 5);
+        
+        let carouselInnerHtml = '';
+        let carouselIndicatorsHtml = '';
+        
+        heroItems.forEach((item, index) => {
+            const isActive = index === 0 ? 'active' : '';
+            
+            carouselIndicatorsHtml += `
+                <button type="button" data-bs-target="#heroCarousel" data-bs-slide-to="${index}" class="${isActive}" aria-label="Slide ${index + 1}"></button>
+            `;
+            
+            carouselInnerHtml += `
+                <div class="carousel-item ${isActive}">
+                    <img src="${item.image_url || 'https://placehold.co/1200x500?text=No+Image'}" alt="${item.title}">
+                    <div class="carousel-caption">
+                        <div class="hero-meta">
+                            <span class="badge bg-danger">${item.type}</span>
+                            ${item.rating ? `<span class="badge bg-success">${item.rating}</span>` : ''}
+                            ${item.year ? `<span class="badge bg-secondary">${item.year}</span>` : ''}
+                        </div>
+                        <h3>${item.title}</h3>
+                        <p>${item.title} is now available to watch. Experience the latest entertainment right here.</p>
+                        <button class="btn btn-danger btn-lg load-content-btn" data-url="${item.url}">
+                            <i class="bi bi-play-circle"></i> Watch Now
+                        </button>
+                    </div>
+                </div>
+            `;
+        });
+        
+        document.querySelector('#heroCarousel .carousel-inner').innerHTML = carouselInnerHtml;
+        document.querySelector('#heroCarousel .carousel-indicators').innerHTML = carouselIndicatorsHtml;
+        
+        // Add event listeners to the watch now buttons
+        const watchButtons = document.querySelectorAll('#heroCarousel .load-content-btn');
+        watchButtons.forEach(button => {
+            button.addEventListener('click', () => {
+                this.videoUrlInput.value = button.getAttribute('data-url');
+                this.extractPlayers(); // This will handle scrolling internally
+            });
+        });
+    }
+
+    displayLatestUploads(data) {
+        // Check if there was an error
+        if (data.error) {
+            this.latestUploadsList.innerHTML = `
+                <div class="col-12">
+                    <div class="alert alert-danger">
+                        <h5><i class="bi bi-exclamation-triangle"></i> Error Loading Latest Uploads</h5>
+                        <p>${data.error}</p>
+                    </div>
+                </div>
+            `;
+            return;
+        }
+        
+        // Check if we have items
+        if (!data.items || data.items.length === 0) {
+            this.latestUploadsList.innerHTML = `
+                <div class="col-12">
+                    <div class="alert alert-info">
+                        <h5><i class="bi bi-info-circle"></i> No latest uploads found</h5>
+                        <p>There are no recent uploads to display.</p>
+                    </div>
+                </div>
+            `;
+            return;
+        }
+        
+        // Display latest uploads
+        let html = '';
+        
+        data.items.forEach((item, index) => {
+            html += `
+                <div class="col-6 col-sm-4 col-md-3 col-lg-2 col-xl-2 mb-4">
+                    <div class="movie-card">
+                        <div class="poster-container">
+                            <img src="${item.image_url || 'https://placehold.co/200x300?text=No+Image'}" alt="${item.title}" loading="lazy">
+                        </div>
+                        <div class="card-body">
+                            <h5 class="card-title" title="${item.title}">${item.title.length > 30 ? item.title.substring(0, 30) + '...' : item.title}</h5>
+                            <div class="movie-meta">
+                                <span class="badge bg-${item.type === 'Series' ? 'warning' : 'danger'}">${item.type}</span>
+                                ${item.rating ? `<span class="badge bg-success">${item.rating}</span>` : ''}
+                                ${item.year ? `<span class="badge bg-secondary">${item.year}</span>` : ''}
+                            </div>
+                            <button class="btn btn-danger load-content-btn" data-url="${item.url}">
+                                <i class="bi bi-play-circle"></i> Play
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            `;
+        });
+        
+        this.latestUploadsList.innerHTML = html;
+        
+        // Add event listeners to the load buttons
+        const loadButtons = this.latestUploadsList.querySelectorAll('.load-content-btn');
+        loadButtons.forEach(button => {
+            button.addEventListener('click', () => {
+                this.videoUrlInput.value = button.getAttribute('data-url');
+                this.extractPlayers(); // This will handle scrolling internally
+            });
+        });
     }
 
     displaySeriesResults(data) {
@@ -458,32 +695,30 @@ class VideoPlayerExtractor {
                     <div class="tab-pane fade ${isActive ? 'show active' : ''}" 
                          id="${playerTabsContentId}-player-${playerIndex}" 
                          role="tabpanel">
-                        <div class="card mt-3">
-                            <div class="card-body">
-                                <div class="d-flex justify-content-between align-items-center mb-3">
-                                    <h5 class="card-title mb-0">${player.server_name || `Player ${playerIndex + 1}`}</h5>
-                                    <div>
-                                        <span class="badge bg-info">${player.type || 'Stream'}</span>
-                                    </div>
+                        <div class="mt-3">
+                            <div class="d-flex justify-content-between align-items-center mb-3">
+                                <h5 class="h5 mb-0">${player.server_name || `Player ${playerIndex + 1}`}</h5>
+                                <div>
+                                    <span class="badge bg-info">${player.type || 'Stream'}</span>
                                 </div>
-                                
-                                <div class="player-container mb-3">
-                                    <iframe 
-                                        src="${player.iframe_url}" 
-                                        class="player-frame"
-                                        allowfullscreen
-                                        loading="lazy">
-                                    </iframe>
-                                </div>
-                                
-                                <div class="d-flex justify-content-between align-items-center">
-                                    <small class="text-muted">
-                                        <i class="bi bi-link"></i> ${player.iframe_url}
-                                    </small>
-                                    <button class="btn btn-outline-primary btn-sm" onclick="copyUrl('${player.iframe_url}')">
-                                        <i class="bi bi-clipboard"></i> Copy URL
-                                    </button>
-                                </div>
+                            </div>
+                            
+                            <div class="player-container mb-3">
+                                <iframe 
+                                    src="${player.iframe_url}" 
+                                    class="player-frame"
+                                    allowfullscreen
+                                    loading="lazy">
+                                </iframe>
+                            </div>
+                            
+                            <div class="d-flex justify-content-between align-items-center">
+                                <small class="text-muted">
+                                    <i class="bi bi-link"></i> ${player.iframe_url}
+                                </small>
+                                <button class="btn btn-outline-danger btn-sm" onclick="copyUrl('${player.iframe_url}')">
+                                    <i class="bi bi-clipboard"></i> Copy URL
+                                </button>
                             </div>
                         </div>
                     </div>
@@ -566,33 +801,31 @@ class VideoPlayerExtractor {
                 `;
             } else if (player.iframe_url) {
                 tabContent.innerHTML = `
-                    <div class="card mt-3">
-                        <div class="card-body">
-                            <div class="d-flex justify-content-between align-items-center mb-3">
-                                <h5 class="card-title mb-0">${player.server_name}</h5>
-                                <div>
-                                    <span class="badge bg-info">${player.type || 'Stream'}</span>
-                                    ${player.quality ? `<span class="badge bg-success ms-2">${player.quality}</span>` : ''}
-                                </div>
+                    <div class="mt-3">
+                        <div class="d-flex justify-content-between align-items-center mb-3">
+                            <h5 class="h5 mb-0">${player.server_name}</h5>
+                            <div>
+                                <span class="badge bg-info">${player.type || 'Stream'}</span>
+                                ${player.quality ? `<span class="badge bg-success ms-2">${player.quality}</span>` : ''}
                             </div>
-                            
-                            <div class="player-container mb-3">
-                                <iframe 
-                                    src="${player.iframe_url}" 
-                                    class="player-frame"
-                                    allowfullscreen
-                                    loading="lazy">
-                                </iframe>
-                            </div>
-                            
-                            <div class="d-flex justify-content-between align-items-center">
-                                <small class="text-muted">
-                                    <i class="bi bi-link"></i> ${player.iframe_url}
-                                </small>
-                                <button class="btn btn-outline-primary btn-sm" onclick="copyUrl('${player.iframe_url}')">
-                                    <i class="bi bi-clipboard"></i> Copy URL
-                                </button>
-                            </div>
+                        </div>
+                        
+                        <div class="player-container mb-3">
+                            <iframe 
+                                src="${player.iframe_url}" 
+                                class="player-frame"
+                                allowfullscreen
+                                loading="lazy">
+                            </iframe>
+                        </div>
+                        
+                        <div class="d-flex justify-content-between align-items-center">
+                            <small class="text-muted">
+                                <i class="bi bi-link"></i> ${player.iframe_url}
+                            </small>
+                            <button class="btn btn-outline-danger btn-sm" onclick="copyUrl('${player.iframe_url}')">
+                                <i class="bi bi-clipboard"></i> Copy URL
+                            </button>
                         </div>
                     </div>
                 `;
@@ -619,6 +852,9 @@ function copyUrl(url) {
         setTimeout(() => {
             event.target.innerHTML = originalText;
         }, 2000);
+    }).catch(err => {
+        console.error('Failed to copy: ', err);
+        alert('Failed to copy URL: ' + url);
     });
 }
 

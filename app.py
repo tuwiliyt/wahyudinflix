@@ -183,6 +183,105 @@ def search_movies_series(query, content_type=None):
     except Exception as e:
         return {"error": f"Search failed: {str(e)}"}
 
+def get_latest_uploads():
+    """
+    Get latest uploads from the main page
+    """
+    headers = {
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36'
+    }
+    
+    try:
+        # Get the main page
+        response = requests.get("https://new18.ngefilm.site/", headers=headers, timeout=30)
+        response.raise_for_status()
+        soup = BeautifulSoup(response.content, 'html.parser')
+        
+        # Find the "Upload Terbaru" section
+        latest_items = []
+        
+        # Look for content items under the "Upload Terbaru" heading
+        homemodule_title = soup.find('h3', class_='homemodule-title', string='Upload Terbaru')
+        if homemodule_title:
+            # Find the container with latest uploads (usually the next sibling or in the main content area)
+            grid_container = soup.find('div', id='gmr-main-load')
+            if grid_container:
+                articles = grid_container.find_all('article', class_='item-infinite')
+                
+                for article in articles[:20]:  # Get first 20 latest items
+                    try:
+                        # Extract title
+                        title_element = article.find('h2', class_='entry-title')
+                        title = ""
+                        if title_element:
+                            title_link = title_element.find('a')
+                            if title_link:
+                                title = title_link.get_text().strip()
+                        
+                        # Extract URL
+                        url = ""
+                        if title_element:
+                            title_link = title_element.find('a', href=True)
+                            if title_link:
+                                url = title_link.get('href')
+                        
+                        # Extract image
+                        image_url = ""
+                        img_element = article.find('img')
+                        if img_element:
+                            image_url = img_element.get('data-src') or img_element.get('src')
+                        
+                        # Extract rating
+                        rating = ""
+                        rating_element = article.find(class_='gmr-rating-item')
+                        if rating_element:
+                            rating_text = rating_element.get_text().strip()
+                            # Extract numeric rating if possible
+                            rating_match = re.search(r'(\d+\.?\d*)', rating_text)
+                            if rating_match:
+                                rating = rating_match.group(1)
+                        
+                        # Extract year from title or date
+                        year = ""
+                        # Try to find year in the title
+                        year_match = re.search(r'(?:\(|-|,)\s*(20\d{2}|19\d{2})\s*[\)\]-]?', title)
+                        if year_match:
+                            year = year_match.group(1)
+                        else:
+                            # Try to find year in dateCreated element
+                            date_element = article.find('time', class_='screen-reader-text')
+                            if date_element and date_element.get('datetime'):
+                                year = date_element.get('datetime')[:4]
+                        
+                        # Determine if it's a series or movie
+                        type_indicator = "Movie"
+                        if any(keyword in title.lower() for keyword in ['season', 'episode', 'eps', 'series']):
+                            type_indicator = "Series"
+                        elif '/tv/' in url or '/series/' in url:
+                            type_indicator = "Series"
+                        
+                        if title and url:
+                            latest_items.append({
+                                'title': title,
+                                'url': url,
+                                'image_url': image_url,
+                                'rating': rating,
+                                'year': year,
+                                'type': type_indicator
+                            })
+                    except Exception as e:
+                        print(f"Error processing latest upload item: {e}")
+                        continue
+        
+        return {
+            'section_title': 'Upload Terbaru',
+            'items': latest_items,
+            'total_items': len(latest_items)
+        }
+        
+    except Exception as e:
+        return {"error": f"Failed to get latest uploads: {str(e)}"}
+
 def extract_series_episodes(series_url, soup, headers, title):
     """
     Extract episode URLs and their player information from a series page
@@ -440,6 +539,17 @@ def search_api():
         
     except Exception as e:
         return jsonify({"error": f"Search error: {str(e)}"}), 500
+
+@app.route('/api/latest', methods=['GET'])
+def latest_api():
+    try:
+        # Get latest uploads
+        result = get_latest_uploads()
+        
+        return jsonify(result)
+        
+    except Exception as e:
+        return jsonify({"error": f"Server error: {str(e)}"}), 500
 
 if __name__ == '__main__':
     app.run(debug=True, host='0.0.0.0', port=5000)

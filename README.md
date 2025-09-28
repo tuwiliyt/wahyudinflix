@@ -1,21 +1,25 @@
-# Video Player Extractor Web Application
+# WAHYUDIN-FLIX - Netflix-Style Video Player Extractor
 
-A web application that extracts video player URLs from movie and series websites and displays them in embedded players.
+A Netflix-style web application that extracts video player URLs from movie and series websites and displays them in embedded players with a modern, responsive interface.
 
 ## Features
 
-- Extract player URLs from movie and series episode pages
-- Display all available streaming options in embedded players
-- Responsive design that works on desktop and mobile devices
-- Copy player URLs to clipboard with one click
-- Modern, user-friendly interface
+- **Netflix-Style UI**: Modern dark theme interface similar to Netflix
+- **Hero Carousel**: Featured content slider with latest uploads
+- **Latest Uploads Section**: Display of the most recently added content
+- **Search Functionality**: Find movies and series by title
+- **Player Extraction**: Extract player URLs from movie and series episode pages
+- **Responsive Design**: Works seamlessly on desktop, tablet, and mobile devices
+- **Auto-Scroll**: Automatically navigates to results when clicking play/search
+- **Copy URLs**: Copy player URLs to clipboard with one click
+- **Custom Favicon**: Branded "W" favicon for brand recognition
 
 ## Installation
 
 1. Clone the repository:
 ```bash
-git clone <repository-url>
-cd video-player-extractor
+git clone https://github.com/tuwiliyt/wahyudinflix.git
+cd wahyudinflix
 ```
 
 2. Install Python dependencies:
@@ -35,40 +39,72 @@ python app.py
 http://localhost:5000
 ```
 
-3. Enter the URL of a movie or series episode in the input field.
+3. Browse the hero carousel or latest uploads for featured content
 
-4. Click "Extract Players" to fetch all available streaming options.
+4. Use the search function to find specific movies/series
 
-5. Switch between different player servers using the tabs.
+5. Click "Play" or "Watch Now" buttons to extract players directly
 
-6. Click "Copy URL" to copy a player URL to your clipboard.
+6. Enter a custom URL in the input field to extract players from any supported site
+
+7. Switch between different player servers using the tabs
+
+8. Click "Copy URL" to copy a player URL to your clipboard
 
 ## How It Works
 
-1. The user enters a video URL (movie or series episode)
-2. The Flask backend fetches the page and parses it to find player URLs
-3. For each server, the backend extracts the iframe URL for embedding
-4. The frontend displays each player in a separate tab with an embedded iframe
-5. Users can switch between servers and copy URLs as needed
+1. The application scrapes the latest uploads from `https://new18.ngefilm.site/`
+2. The hero carousel features the most recent content
+3. When a user clicks play or enters a URL, the backend fetches and parses the page
+4. Player URLs are extracted and displayed in embedded iframes
+5. The interface automatically scrolls to show the loaded content
 
-## Supported Sites
+## Supported Content
 
-This application is designed to work with sites that follow a similar structure to the example sites. You may need to modify the parsing logic for other sites.
+This application is designed to work with the ngefilm.site structure and similar sites. It extracts content from:
+- Movie pages
+- TV series episodes
+- Multiple player servers per content item
 
 ## Technologies Used
 
-- **Frontend**: HTML5, CSS3, Bootstrap 5, JavaScript
+- **Frontend**: HTML5, CSS3, Bootstrap 5, JavaScript, Netflix-style UI
 - **Backend**: Python, Flask, BeautifulSoup4, Requests
 - **API**: RESTful API for communication between frontend and backend
+- **Design**: Responsive CSS with media queries for all screen sizes
 
-## Development
+## Project Structure
+
+```
+wahyudinflix/
+├── app.py                 # Main Flask application
+├── requirements.txt       # Python dependencies  
+├── templates/
+│   └── index.html        # Main HTML template
+├── static/
+│   ├── styles.css        # CSS styling (Netflix-style)
+│   ├── app.js            # JavaScript functionality
+│   └── images/           # Static assets (favicon)
+└── README.md             # Project documentation
+```
+
+## Customization
 
 To modify the application:
 
-1. Frontend files: `templates/index.html`, `static/styles.css`, `static/app.js`
-2. Backend logic: `app.py`
-3. Dependencies: `requirements.txt`
+1. UI styling: Edit `static/styles.css`
+2. Frontend behavior: Modify `static/app.js`
+3. Backend logic: Update `app.py` 
+4. Layout: Change `templates/index.html`
+
+## Deployment
+
+The application can be deployed to platforms like Render, Heroku, or any Python hosting service. Make sure to install dependencies and set up environment variables as needed.
 
 ## License
 
-This project is for educational purposes only. Please respect the terms of service of the websites you interact with.
+This project is for educational purposes only. Please respect the terms of service of the websites you interact with and use responsibly.
+
+## Contributing
+
+Feel free to fork this repository and submit pull requests for improvements. All contributions are welcome!
